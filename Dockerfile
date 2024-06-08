@@ -1,10 +1,3 @@
-FROM python:3.11-slim
+FROM apache/airflow:slim-2.9.2rc1-python3.11
 
-# Install PostgreSQL command-line tools
-RUN apt update && apt -y install postgresql-client && apt-get clean
-
-# Copy the ELT script 
-COPY elt_script.py .
-
-# Set the default command to run the ELT script
-CMD ["python", "elt_script.py"]
+RUN pip install apache-airflow-providers-docker
