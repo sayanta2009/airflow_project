@@ -10,6 +10,7 @@ python = "^3.11"
 dbt-core = "^1.8.2"
 pre-commit = "^3.7.1"
 python-dotenv = "^1.0.1"
+cryptography = "^42.0.8"
 
 [tool.poetry.group.dev.dependencies]
 dbt-postgres = "^1.8.1"

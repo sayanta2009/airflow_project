@@ -1,3 +1,5 @@
-FROM apache/airflow:slim-2.9.2rc1-python3.11
+FROM apache/airflow:latest
 
-RUN pip install apache-airflow-providers-docker
+RUN pip install apache-airflow-providers-docker psycopg2-binary
+
+RUN airflow db upgrade

@@ -8,3 +8,6 @@ run: # run command destination database
 
 lint: # code formatting and linting
 	@pre-commit run --all-files
+
+airflow_init: # Initialize airflow user
+	@docker-compose up init-airflow -d
