@@ -1,28 +1,13 @@
-## Airflow
+# ELT Project using Airflow, DBT and Postgres
 
-Generate fernet key using below command
-
-    python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
-
-Fernet key isn’t required but is best practice to use encrypted data when in a prod environment
-
-Install apache-airflow using pip from https://airflow.apache.org/docs/apache-airflow/stable/installation/installing-from-pypi.html
-
-    pip install "apache-airflow[celery]==2.9.1" --constraint "https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.8.txt"
-    pip install apache-airflow-providers-docker
-
-This installation is not required to run the project but for easier coding.
-
-# Custom ELT Project
-
-This repository contains a custom Extract, Load, Transform (ELT) project that utilizes Docker and PostgreSQL to demonstrate a simple ELT process.
+This repository contains a custom Extract, Load, Transform (ELT) project that utilizes Airflow, PostgreSQL and DBT to demonstrate a simple ELT process.
 
 ## Repository Structure
 
 1. **docker-compose.yaml**: This file contains the configuration for Docker Compose, which is used to orchestrate multiple Docker containers. It defines three services:
    - `source_postgres`: The source PostgreSQL database.
    - `destination_postgres`: The destination PostgreSQL database.
-   - `elt_script`: The service that runs the ELT script.
+   - `airflow`: The webserver and scheduler.
 
 2. **elt/Dockerfile**: This Dockerfile sets up a Python environment and installs the PostgreSQL client. It also copies the ELT script into the container and sets it as the default command.
 
@@ -35,8 +20,53 @@ This repository contains a custom Extract, Load, Transform (ELT) project that ut
 1. **Docker Compose**: Using the `docker-compose.yaml` file, three Docker containers are spun up:
    - A source PostgreSQL database with sample data.
    - A destination PostgreSQL database.
-   - A Python environment that runs the ELT script.
+   - An airflow webserver and scheduler that consists of two tasks in a single DAG - firstly to copy the tables from source db to
+   destination db and, secondly run some DBT macros to create additional tables
 
-2. **ELT Process**: The `elt_script.py` waits for the source PostgreSQL database to become available. Once it's available, the script uses `pg_dump` to dump the source database to a SQL file. Then, it uses `psql` to load this SQL file into the destination PostgreSQL database.
+2. **Database Initialization**: The `init.sql` script initializes the source database with sample data. It creates several tables and populates them with sample data.
 
-3. **Database Initialization**: The `init.sql` script initializes the source database with sample data. It creates several tables and populates them with sample data.
+# Installation
+
+Create a Python virtualenv, activate it and run the below command
+
+    make install
+
+### DBT
+
+Create  ~/.dbt/profiles.yml file with below content 
+
+    custom_postgres:
+        outputs:
+            dev:
+            dbname: destination_db
+            host: host.docker.internal
+            pass: secret
+            port: 5434
+            schema: public
+            threads: 1
+            type: postgres
+            user: postgres
+        target: dev
+
+### Airflow
+
+Generate fernet key using below command and put in your `.env` file
+
+    python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+
+Fernet key isn’t required but is best practice to use encrypted data when in a prod environment
+
+`This installation is not required to run the project but for easier coding.` Install apache-airflow using pip from https://airflow.apache.org/docs/apache-airflow/stable/installation/installing-from-pypi.html
+
+    pip install "apache-airflow[celery]==2.9.1" --constraint "https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.8.txt"
+    pip install apache-airflow-providers-docker
+
+# How to run
+
+- Use `docker-compose up` to churn up all the containers
+- Once all the containers are up and running, go to `http://webserver.airflow-project.orb.local/home` and login in with airflow username and password set in .env file
+- Run the dag `elt_and_dbt`
+- Run `make run` to connect to the destination postgres db
+    - Use `\c destination_db` to connect to the database
+    - Use `\dt` to list all the tables migrated from source database and those created by DBT
+

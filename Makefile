@@ -3,7 +3,7 @@ install: # Install dependencies
 	@pip install -U poetry
 	@poetry install --no-root
 
-run: # run command destination database
+run: # run command destination database, then use \c database name to use the database
 	@docker exec -it airflow_project-destination_postgres-1 psql -U postgres
 
 lint: # code formatting and linting
